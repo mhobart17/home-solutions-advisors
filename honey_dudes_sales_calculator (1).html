@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="HD Sales">
+  <meta name="theme-color" content="#1a1a18">
+  <title>HD Sales Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark: #1a1a18;
+      --mid: #3a3a36;
+      --muted: #888780;
+      --border: #2e2e2a;
+      --bg: #111110;
+      --card: #1e1e1c;
+      --accent: #f0b429;
+      --green: #3dcf6e;
+      --green-dim: #1a3d28;
+      --red: #e03b3b;
+      --red-dim: #3a1414;
+      --yellow: #f0b429;
+      --yellow-dim: #3a2e10;
+    }
+
+    html { background: var(--bg); }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: #fff;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: 0 0 env(safe-area-inset-bottom, 20px);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Top bar */
+    .topbar {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-brand {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .topbar-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    /* Main layout */
+    .main {
+      padding: 20px 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Field label */
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Days stepper — big and bold */
+    .days-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px 16px;
+      border: 1px solid var(--border);
+    }
+
+    .days-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .days-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      background: var(--mid);
+      border: none;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background 0.1s, transform 0.08s;
+      flex-shrink: 0;
+    }
+
+    .days-btn:active {
+      background: #4a4a46;
+      transform: scale(0.95);
+    }
+
+    .days-display {
+      flex: 1;
+      text-align: center;
+    }
+
+    .days-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 52px;
+      font-weight: 500;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .days-unit {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Dollar inputs */
+    .inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .input-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      transition: border-color 0.15s;
+    }
+
+    .input-card:focus-within {
+      border-color: var(--accent);
+    }
+
+    .input-inner {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .input-symbol {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .dollar-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: #fff;
+      width: 100%;
+      min-width: 0;
+      -webkit-appearance: none;
+      letter-spacing: -0.02em;
+    }
+
+    .dollar-input::placeholder {
+      color: var(--border);
+    }
+
+    .dollar-input::-webkit-inner-spin-button,
+    .dollar-input::-webkit-outer-spin-button { display: none; }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* Traffic light result */
+    .result-card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: none;
+    }
+
+    .result-card.show { display: block; }
+
+    .light-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .lights-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      background: #111;
+      border-radius: 30px;
+      padding: 12px 10px;
+      flex-shrink: 0;
+    }
+
+    .bulb {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      transition: background 0.3s, box-shadow 0.35s;
+    }
+
+    .bulb.red-off    { background: #2a1212; }
+    .bulb.yellow-off { background: #221e0a; }
+    .bulb.green-off  { background: #0e1e12; }
+    .bulb.red-on    { background: var(--red);    box-shadow: 0 0 14px 4px rgba(224,59,59,0.7); }
+    .bulb.yellow-on { background: var(--yellow); box-shadow: 0 0 14px 4px rgba(240,180,41,0.7); }
+    .bulb.green-on  { background: var(--green);  box-shadow: 0 0 14px 4px rgba(61,207,110,0.7); }
+
+    .status-col {
+      flex: 1;
+    }
+
+    .status-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .status-text {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .status-text.green  { color: var(--green); }
+    .status-text.yellow { color: var(--yellow); }
+    .status-text.red    { color: var(--red); }
+
+    /* Commission */
+    .comm-divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .comm-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comm-total-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .comm-total-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .comm-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .split-card {
+      padding: 16px 20px;
+    }
+
+    .split-card.now {
+      border-right: 1px solid var(--border);
+      background: var(--green-dim);
+    }
+
+    .split-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .split-card.now .split-title  { color: var(--green); }
+    .split-card.later .split-title { color: var(--muted); }
+
+    .split-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .split-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* Reset */
+    .reset-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      width: 100%;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.02em;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .reset-btn:active {
+      background: var(--mid);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-brand">Honey Dudes Handyman</div>
+    <div class="topbar-title">Sales Calculator</div>
+  </div>
+
+  <div class="main">
+
+    <!-- Tech Days -->
+    <div class="days-card">
+      <div class="field-label">Tech Days</div>
+      <div class="days-stepper">
+        <button class="days-btn" onclick="adjustDays(-0.5)">−</button>
+        <div class="days-display">
+          <div class="days-number" id="techDaysOut">2</div>
+          <div class="days-unit">days on site</div>
+        </div>
+        <button class="days-btn" onclick="adjustDays(0.5)">+</button>
+      </div>
+    </div>
+
+    <!-- Price + Materials -->
+    <div class="inputs-row">
+      <div class="input-card">
+        <div class="field-label">Job Price</div>
+        <div class="input-inner">
+          <span class="input-symbol">$</span>
+          <input class="dollar-input" type="number" id="jobPrice" placeholder="0" min="0" inputmode="decimal" oninput="update()">
+        </div>
+      </div>
+      <div class="input-card">
+        <div class="field-label">Materials</div>
+        <div class="input-inner">
+          <span class="input-symbol">$</span>
+          <input class="dollar-input" type="number" id="materials" placeholder="0" min="0" inputmode="decimal" oninput="update()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Result: traffic light + commission -->
+    <div class="result-card" id="resultCard">
+
+      <!-- Traffic light -->
+      <div class="light-row">
+        <div class="lights-col">
+          <div class="bulb red-off"    id="bulbRed"></div>
+          <div class="bulb yellow-off" id="bulbYellow"></div>
+          <div class="bulb green-off"  id="bulbGreen"></div>
+        </div>
+        <div class="status-col">
+          <div class="status-label">Job Health</div>
+          <div class="status-text" id="statusText"></div>
+        </div>
+      </div>
+
+      <div class="comm-divider"></div>
+
+      <!-- Commission total -->
+      <div class="comm-total">
+        <span class="comm-total-label">Your Commission</span>
+        <span class="comm-total-value" id="commTotal">$0</span>
+      </div>
+
+      <!-- Split -->
+      <div class="comm-split">
+        <div class="split-card now">
+          <div class="split-title">Paid Now</div>
+          <div class="split-value" id="commNow">$0</div>
+          <div class="split-sub">Upon sale</div>
+        </div>
+        <div class="split-card later">
+          <div class="split-title">Upon Completion</div>
+          <div class="split-value" id="commLater">$0</div>
+          <div class="split-sub">After job finishes</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Reset -->
+    <button class="reset-btn" onclick="resetAll()">↺ &nbsp;Reset</button>
+
+  </div>
+
+  <script>
+    const OVERHEAD_PER_DAY      = 423;
+    const INSTALL_BONUS_PER_DAY = 100;
+    const COMMISSION_RATE       = 0.0725;
+    const CC_RATE               = 0.03;
+
+    let techDays = 2;
+
+    function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+    function adjustDays(delta) {
+      techDays = Math.max(0, Math.min(20, techDays + delta));
+      document.getElementById('techDaysOut').textContent =
+        techDays % 1 === 0 ? String(techDays) : techDays.toFixed(1);
+      update();
+    }
+
+    function update() {
+      const price = parseFloat(document.getElementById('jobPrice').value) || 0;
+      const mats  = parseFloat(document.getElementById('materials').value) || 0;
+      const card  = document.getElementById('resultCard');
+
+      if (price === 0) { card.classList.remove('show'); return; }
+
+      // Margin (hidden from user)
+      const overhead     = techDays * OVERHEAD_PER_DAY;
+      const installBonus = techDays * INSTALL_BONUS_PER_DAY;
+      const commission   = price * (COMMISSION_RATE + CC_RATE);
+      const totalCosts   = overhead + installBonus + mats + commission;
+      const margin       = ((price - totalCosts) / price) * 100;
+
+      // Show card
+      card.classList.add('show');
+
+      // Bulbs
+      const bulbRed    = document.getElementById('bulbRed');
+      const bulbYellow = document.getElementById('bulbYellow');
+      const bulbGreen  = document.getElementById('bulbGreen');
+      const statusText = document.getElementById('statusText');
+
+      bulbRed.className    = 'bulb red-off';
+      bulbYellow.className = 'bulb yellow-off';
+      bulbGreen.className  = 'bulb green-off';
+
+      if (margin >= 53) {
+        bulbGreen.className  = 'bulb green-on';
+        statusText.className = 'status-text green';
+        statusText.textContent = 'Good to sell';
+      } else if (margin >= 50) {
+        bulbYellow.className = 'bulb yellow-on';
+        statusText.className = 'status-text yellow';
+        statusText.textContent = 'Check with your supervisor';
+      } else {
+        bulbRed.className    = 'bulb red-on';
+        statusText.className = 'status-text red';
+        statusText.textContent = 'Call supervisor for approval';
+      }
+
+      // Commission
+      const commBase  = Math.max(0, price - mats);
+      const commTotal = commBase * COMMISSION_RATE;
+      const commHalf  = commTotal / 2;
+
+      document.getElementById('commTotal').textContent = fmt(commTotal);
+      document.getElementById('commNow').textContent   = fmt(commHalf);
+      document.getElementById('commLater').textContent = fmt(commHalf);
+    }
+
+    function resetAll() {
+      techDays = 2;
+      document.getElementById('techDaysOut').textContent = '2';
+      document.getElementById('jobPrice').value  = '';
+      document.getElementById('materials').value = '';
+      document.getElementById('resultCard').classList.remove('show');
+    }
+
+    update();
+  </script>
+</body>
+</html>
